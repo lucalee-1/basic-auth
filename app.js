@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const session = require("express-session");
 const User = require("./models/user");
 const user = require("./models/user");
 const app = express();
@@ -18,6 +19,9 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  session({ secret: "temporarysecret", resave: false, saveUninitialized: true })
+);
 
 app.get("/", (req, res) => {
   res.render("home");
@@ -32,6 +36,7 @@ app.post("/register", async (req, res) => {
   const hash = await bcrypt.hash(password, 12);
   const user = new User({ username, password: hash });
   await user.save();
+  req.session.user_id = user._id;
   res.redirect("/");
 });
 
@@ -42,15 +47,19 @@ app.get("/login", (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
-  const validPw = await bcrypt.compare(password, user.password)
-  if(validPw) {
-      res.send(`Welcome, ${user.username}!`)
+  const validPw = await bcrypt.compare(password, user.password);
+  if (validPw) {
+    req.session.user_id = user._id;
+    res.redirect("/secret");
   } else {
-      res.send("Invalid credentials!")
+    res.redirect("/login");
   }
 });
 
 app.get("/secret", (req, res) => {
+  if (!req.session.user_id) {
+    res.redirect("/login");
+  }
   res.send("Secret message");
 });
 
