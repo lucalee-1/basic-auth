@@ -20,7 +20,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  res.send("Root");
+  res.render("home");
 });
 
 app.get("/register", (req, res) => {
@@ -33,6 +33,21 @@ app.post("/register", async (req, res) => {
   const user = new User({ username, password: hash });
   await user.save();
   res.redirect("/");
+});
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+  const validPw = await bcrypt.compare(password, user.password)
+  if(validPw) {
+      res.send(`Welcome, ${user.username}!`)
+  } else {
+      res.send("Invalid credentials!")
+  }
 });
 
 app.get("/secret", (req, res) => {
