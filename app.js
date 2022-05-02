@@ -71,6 +71,6 @@ app.get("/secret", requireLogin, (req, res) => {
   res.render("secret");
 });
 
-app.listen(8000, () => {
+app.listen(3000, () => {
   console.log("Connected on port 3000");
 });
